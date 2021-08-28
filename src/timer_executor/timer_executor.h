@@ -1,9 +1,16 @@
+#pragma once
+
 #include "../timer/timer.h"
 #include "../timer/timer_impl/hours_timer.h"
 #include "../timer/timer_impl/minutes_timer.h"
 #include "../timer/timer_impl/seconds_timer.h"
 #include "../timer/timer_impl/milliseconds_timer.h"
 #include "task.h"
+
+void millisecondCallbackForwarder(void *context);
+void secondsCallbackForwarder(void *context);
+void minutesCallbackForwarder(void *context);
+void hoursCallbackForwarder(void *context);
 
 class TimerExecutor
 {
@@ -13,33 +20,36 @@ class TimerExecutor
         TimedTaskExecutor* _minutesTimed;
         TimedTaskExecutor* _hoursTimed;
 
-        Task** millisecondTasks;
-        Task** secondsTasks;
-        Task** minutesTasks;
-        Task** hoursTasks;
+        uint16_t  _prescaler;
+        uint8_t _duration;
+        uint16_t _prescalerSelect;
 
-        unsigned int _prescaler;
-        unsigned int _duration;
+        // Callbacks
+        void (*_onMilliSecondTick)(void *context);
+        void (*_onSecondTick)(void *context);
+        void (*_onMinuteTick)(void *context);
+        void (*_onHourTick)(void *context);
+        void *ctx;
 
         // Pointer to the configured TimedTaskExecutor to execute the tasks
         TimedTaskExecutor* _handle;
-        unsigned int GetCompareMatchRegisterValue()
+        uint16_t GetCompareMatchRegisterValue()
         {
-            unsigned long num = 16 * 1000000;
-            float denom = _prescaler / _duration;
-            unsigned long result = (num / denom) - 1; 
-            return (int)result;
+            unsigned long num = (16 * 1000000 * _duration) / _prescaler;
+            // float denom = _prescaler / _duration;
+            // unsigned long result = (num / denom) - 1; 
+            // return (int)result;
+            return (uint16_t)num;
         }
         void SetupTimer1()
         {
-            uint8_t prescalerSelect;
             if (_prescaler == 1024)
             {
-                prescalerSelect = (1<<CS12) | (1<<CS10);
+                _prescalerSelect = (1<<CS12) | (1<<CS10);
             }
             if (_prescaler == 8)
             {
-                prescalerSelect = (1<<CS11);
+                _prescalerSelect = (1<<CS11);
             }
             uint8_t oldSREG = SREG;
             // Disable interrupts
@@ -52,10 +62,22 @@ class TimerExecutor
             TCCR1B = 0;
             OCR1A = this->GetCompareMatchRegisterValue();
             // Set 1024 or 8 as the prescaler and enable counter mode
-            TCCR1B |= (1<<WGM12) | prescalerSelect;
+            TCCR1B |= (1<<WGM12) | _prescalerSelect;
             // Setup compare match interrupt
             TIMSK1 |= (1<<OCIE1A);
             // Enable interrupts
+            SREG = oldSREG;
+        }
+        void StopTimer1()
+        {
+            uint8_t oldSREG = SREG;
+            cli();
+            TCNT1 = 0;
+            TCCR1A = 0;
+            TCCR1B = 0;
+            OCR1A = 0;
+            TCCR1B &= ~(1<<WGM12) | ~_prescalerSelect;
+            TIMSK1 &= ~(1<<OCIE1A);
             SREG = oldSREG;
         }
     public:
@@ -75,55 +97,41 @@ class TimerExecutor
         {
             _duration = 0.001;
             _prescaler = 8;
-            SetupTimer1();
             this->_handle = this->_millisecondTimed;
         }
         void UseSecondsResolution()
         {
             _duration = 1;
             _prescaler = 1024;
-            SetupTimer1();
             this->_handle = this->_secondsTimed;
         }
-        void ExecuteTimedTasks()
-        {
-            _handle->Increment();
+        void StartTimerExecutor(
+            void (*onMilliSecondTick)(void *context),
+            void (*onSecondTick)(void *context),
+            void (*onMinuteTick)(void *context),
+            void (*onHourTick)(void *context),
+            void *context) 
+        { 
+            _onMilliSecondTick = onMilliSecondTick;
+            _onSecondTick = onSecondTick;
+            _onMinuteTick = onMinuteTick;
+            _onHourTick = onHourTick;
+            ctx = context;
+            SetupTimer1(); 
         }
-        void ExecuteMillisecondTasks()
-        {
-
-        }
-        void ExecuteSecondsTasks()
-        {
-
-        }
-        void ExecuteMinutesTasks()
-        {
-
-        }
-        void ExecuteHoursTasks() { }
+        void StopTimerExecutor() { StopTimer1(); }
+        void ExecuteTimedTasks(){ _handle->Increment(); }
+        void OnMillisecondTick(){ _onMilliSecondTick(ctx); }
+        void OnSecondTick(){ _onSecondTick(ctx); }
+        void OnMinuteTick() { _onMinuteTick(ctx); }
+        void OnHourTick() { _onHourTick(ctx); }
 };
 
 TimerExecutor timerExecutor;
 
-ISR(TIMER1_COMPA_vect)
-{
-    timerExecutor.ExecuteTimedTasks();
-}
+ISR(TIMER1_COMPA_vect) { timerExecutor.ExecuteTimedTasks(); }
 
-void millisecondCallbackForwarder(void *context)
-{
-    timerExecutor.ExecuteMillisecondTasks();
-}
-void secondsCallbackForwarder(void *context)
-{
-    timerExecutor.ExecuteSecondsTasks();
-}
-void minutesCallbackForwarder(void *context)
-{
-    timerExecutor.ExecuteMinutesTasks();
-}
-void hoursCallbackForwarder(void *context)
-{
-    timerExecutor.ExecuteHoursTasks();
-}
+void millisecondCallbackForwarder(void *context) { timerExecutor.OnMillisecondTick(); }
+void secondsCallbackForwarder(void *context) { timerExecutor.OnSecondTick(); }
+void minutesCallbackForwarder(void *context) { timerExecutor.OnMinuteTick(); }
+void hoursCallbackForwarder(void *context) { timerExecutor.OnHourTick(); }

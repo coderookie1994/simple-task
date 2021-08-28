@@ -1,3 +1,4 @@
+#pragma once
 #include "../timer.h"
 
 class SecondsTimedTaskExecutor : public TimedTaskExecutor

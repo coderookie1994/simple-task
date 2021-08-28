@@ -1,9 +1,10 @@
+#pragma once
 #include "../timer.h"
 
 class MSTimedTaskExecutor : public TimedTaskExecutor
 {
     private:
-        uint8_t _millisecondCounter;
+        uint16_t _millisecondCounter;
         void (*msCallback)(void *context);
         void *ctx;
     public:
