@@ -17,6 +17,7 @@ class TaskManager
         uint8_t _totalMinutesTasks = 0;
         uint8_t _totalHoursTasks = 0;
         unsigned short _prescaler = 0;
+        uint8_t _commonIterator = 0;
         
         uint16_t GetCompareMatchRegisterValue();
     public:

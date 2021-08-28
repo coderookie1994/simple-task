@@ -1,8 +1,6 @@
-#include <Arduino.h>
 
 #include "task.h"
 #include "task_manager.h"
-#include "task_executor.h"
 #include "blink/blink.h"
 
 TaskManager mgr;

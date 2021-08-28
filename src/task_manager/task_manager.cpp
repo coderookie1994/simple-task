@@ -80,7 +80,7 @@ void TaskManager::UseTimerResolution(uint8_t resolution)
 void TaskManager::Start()
 {
     // Set default resolution to milliseconds if not specifically invoked by the client
-    if (_prescaler == 1024 && _duration == 1)
+    if (_prescaler == 1024 && _duration == (uint8_t)1)
     {
         timerExecutor.UseSecondsResolution();
     }
@@ -98,13 +98,13 @@ void TaskManager::Stop(){ timerExecutor.StopTimerExecutor(); }
 
 void TaskManager::OnSecondTick()
 {
-    for (size_t i = 0; i < _totalSecondTasks; i++)
+    for (_commonIterator = 0; _commonIterator < _totalSecondTasks; _commonIterator++)
     {
         /* code */
-        if (this->_secondsTasks[i]->CanExecute())
+        if (this->_secondsTasks[_commonIterator]->CanExecute())
         {
-            this->_secondsTasks[i]->Execute();
-            this->_secondsTasks[i]->AfterExecute();
+            this->_secondsTasks[_commonIterator]->Execute();
+            this->_secondsTasks[_commonIterator]->AfterExecute();
             // if (manager.GlobalWatchdogEnabled)
                 // wdt_reset();                        
         }
@@ -113,21 +113,20 @@ void TaskManager::OnSecondTick()
 
 void TaskManager::OnMinuteTick()
 {
-    for (size_t i = 0; i < _totalMinutesTasks; i++)
+    for (_commonIterator = 0; _commonIterator < _totalMinutesTasks; _commonIterator++)
     {
         /* code */
-        if (this->_minutesTasks[i]->CanExecute())
+        if (this->_minutesTasks[_commonIterator]->CanExecute())
         {
-            this->_minutesTasks[i]->Execute();
-            this->_minutesTasks[i]->AfterExecute();
+            this->_minutesTasks[_commonIterator]->Execute();
+            this->_minutesTasks[_commonIterator]->AfterExecute();
             // if (manager.GlobalWatchdogEnabled)
                 // wdt_reset();                        
         }
     }
 }
 
-int ctr = 0;
 void msForwarder(void *context) { }
-void secForwarder(void *context) { Serial.println(++ctr); }
+void secForwarder(void *context) { }
 void minForwarder(void *context) { static_cast<TaskManager*>(context)->OnMinuteTick(); }
 void hrCallbackForwarder(void *context) { }
