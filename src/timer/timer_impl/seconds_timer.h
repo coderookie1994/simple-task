@@ -5,18 +5,16 @@ class SecondsTimedTaskExecutor : public TimedTaskExecutor
 {
     private:
         uint8_t _secondCounter = 0;
-        void (*secondsCallback)(void *context);
-        void *ctx;
+        void (*secondsCallback)();
     public:
-        SecondsTimedTaskExecutor(void (*callback)(void *context), void *context)
+        SecondsTimedTaskExecutor(void (*callback)())
         {
             secondsCallback = callback;
-            ctx = context;
         }
         void Increment() override
         {            
             // Execute tasks configured for seconds
-            secondsCallback(ctx);
+            secondsCallback();
             if (++_secondCounter % 60 == 0)
             {
                 nextTimer->Increment();

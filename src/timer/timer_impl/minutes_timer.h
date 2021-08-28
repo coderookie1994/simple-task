@@ -5,18 +5,16 @@ class MinutesTimedTaskExecutor : public TimedTaskExecutor
 {
     private:
         uint8_t _minutesCounter = 0;
-        void (*minutesCallback)(void *context);
-        void *ctx;
+        void (*minutesCallback)();
     public:
-        MinutesTimedTaskExecutor(void (*callback)(void *context), void *context)
+        MinutesTimedTaskExecutor(void (*callback)())
         {
             minutesCallback = callback;
-            ctx = context;
         }
         void Increment() override
         {            
             // Execute tasks configured for minutes
-            minutesCallback(ctx);
+            minutesCallback();
             if (++_minutesCounter % 60 == 0)
             {
                 nextTimer->Increment();

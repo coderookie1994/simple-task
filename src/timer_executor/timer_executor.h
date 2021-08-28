@@ -7,10 +7,10 @@
 #include "../timer/timer_impl/milliseconds_timer.h"
 #include "task.h"
 
-void millisecondCallbackForwarder(void *context);
-void secondsCallbackForwarder(void *context);
-void minutesCallbackForwarder(void *context);
-void hoursCallbackForwarder(void *context);
+void millisecondCallbackForwarder();
+void secondsCallbackForwarder();
+void minutesCallbackForwarder();
+void hoursCallbackForwarder();
 
 class TimerExecutor
 {
@@ -83,10 +83,10 @@ class TimerExecutor
     public:
         TimerExecutor()
         {
-            _millisecondTimed    =  new MSTimedTaskExecutor(millisecondCallbackForwarder, this);
-            _secondsTimed        =  new SecondsTimedTaskExecutor(secondsCallbackForwarder, this);
-            _minutesTimed        =  new MinutesTimedTaskExecutor(minutesCallbackForwarder, this);
-            _hoursTimed          =  new HoursTimedTaskExecutor(hoursCallbackForwarder, this);
+            _millisecondTimed    =  new MSTimedTaskExecutor(millisecondCallbackForwarder);
+            _secondsTimed        =  new SecondsTimedTaskExecutor(secondsCallbackForwarder);
+            _minutesTimed        =  new MinutesTimedTaskExecutor(minutesCallbackForwarder);
+            _hoursTimed          =  new HoursTimedTaskExecutor(hoursCallbackForwarder);
 
             // Build execution pipeline
             _millisecondTimed->SetNext(_secondsTimed);
@@ -131,7 +131,7 @@ TimerExecutor timerExecutor;
 
 ISR(TIMER1_COMPA_vect) { timerExecutor.ExecuteTimedTasks(); }
 
-void millisecondCallbackForwarder(void *context) { timerExecutor.OnMillisecondTick(); }
-void secondsCallbackForwarder(void *context) { timerExecutor.OnSecondTick(); }
-void minutesCallbackForwarder(void *context) { timerExecutor.OnMinuteTick(); }
-void hoursCallbackForwarder(void *context) { timerExecutor.OnHourTick(); }
+void millisecondCallbackForwarder() { timerExecutor.OnMillisecondTick(); }
+void secondsCallbackForwarder() { timerExecutor.OnSecondTick(); }
+void minutesCallbackForwarder() { timerExecutor.OnMinuteTick(); }
+void hoursCallbackForwarder() { timerExecutor.OnHourTick(); }

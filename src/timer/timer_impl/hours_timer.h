@@ -5,18 +5,16 @@ class HoursTimedTaskExecutor : public TimedTaskExecutor
 {
     private:
         uint8_t _hours = 0;
-        void (*hoursCallback)(void *context);
-        void *ctx;
+        void (*hoursCallback)();
     public:
-        HoursTimedTaskExecutor(void (*callback)(void *context), void *context)
+        HoursTimedTaskExecutor(void (*callback)())
         {
             hoursCallback = callback;
-            ctx = context;
         }
         void Increment() override
         {            
             // Execute tasks configured for seconds
-            hoursCallback(ctx);
+            hoursCallback();
             if (++_hours % 60 == 0)
             {
                 _hours = 0;

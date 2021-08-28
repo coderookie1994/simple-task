@@ -5,18 +5,16 @@ class MSTimedTaskExecutor : public TimedTaskExecutor
 {
     private:
         uint16_t _millisecondCounter;
-        void (*msCallback)(void *context);
-        void *ctx;
+        void (*msCallback)();
     public:
-        MSTimedTaskExecutor(void (*callback)(void *context), void *context)
+        MSTimedTaskExecutor(void (*callback)())
         {
             msCallback = callback;
-            ctx = context;
         }
         void Increment() override
         {
             // Execute tasks configured for milliseconds
-            msCallback(ctx);
+            msCallback();
             if (++_millisecondCounter % 1000 == 0)
             {
                 _millisecondCounter = 0;
