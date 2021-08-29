@@ -21,7 +21,7 @@ class TimerExecutor
         TimedTaskExecutor* _hoursTimed;
 
         uint16_t  _prescaler;
-        uint8_t _duration;
+        float _duration;
         uint16_t _prescalerSelect;
 
         // Callbacks
@@ -36,10 +36,7 @@ class TimerExecutor
         uint16_t GetCompareMatchRegisterValue()
         {
             unsigned long num = (16 * 1000000 * _duration) / _prescaler;
-            // float denom = _prescaler / _duration;
-            // unsigned long result = (num / denom) - 1; 
-            // return (int)result;
-            return (uint16_t)num;
+            return (uint16_t)num - 1;
         }
         void SetupTimer1()
         {
