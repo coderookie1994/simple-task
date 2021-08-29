@@ -3,10 +3,10 @@
 
 #include "task.h"
 
-#define IN_MILLISECONDS (uint8_t)1
-#define IN_SECONDS      (uint8_t)2
-#define IN_MINUTES      (uint8_t)4
-#define IN_HOURS        (uint8_t)8
+#define IN_MILLISECONDS B0001
+#define IN_SECONDS      1<<IN_MILLISECONDS
+#define IN_MINUTES      2<<IN_MILLISECONDS
+#define IN_HOURS        3<<IN_MILLISECONDS
 
 class TaskManager
 {
@@ -30,11 +30,13 @@ class TaskManager
         void EnableGlobalWatchdog(const uint8_t& watchDogTimeout);
         void DisableGlobalWatchdog();
         void UseTimerResolution(uint8_t resolution);
-        void AddTask(Task* task, const int& timerType, const uint8_t& value);
-        void AddTask(Task* task, const int& timerType, const uint8_t& value, const uint8_t& iterations);
+        void AddTask(Task* const& task, const int& timerType, const uint8_t& value);
+        // void AddTask(Task* task, const int& timerType, const uint8_t& value, const uint8_t& iterations);
         void InitializeSetup();
         void Start();
         void Stop();
         void OnSecondTick();
         void OnMinuteTick();
+        void OnHourTick();
+        void OnMsTick();
 };

@@ -21,7 +21,7 @@ void TaskManager::EnableGlobalWatchdog(const uint8_t& watchDogTimeout)
 {
     // So it doesn't go in a loop
     GlobalWatchdogEnabled = true;
-    delay(3000);
+    delay((uint16_t)3000);
     wdt_enable(watchDogTimeout);
     Serial.print("Enabled watchdog timeout for ");
     Serial.println(watchDogTimeout);
@@ -36,16 +36,12 @@ void TaskManager::DisableGlobalWatchdog()
     Serial.print("Disabled watchdog timeout");
 }
 
-void TaskManager::AddTask(Task* task, const int& timerType, const uint8_t& value)
+void TaskManager::AddTask(Task* const& task, const int& timerType, const uint8_t& value)
 {
-    if (timerType == IN_SECONDS)
-    {
-        this->_secondsTasks[_totalSecondTasks++] = task;
-    }
-    if (timerType == IN_MILLISECONDS)
-        this->_millisecondTasks[_totalMillisecondTasks++] = task;
-    if (timerType == IN_MINUTES)
-        this->_minutesTasks[_totalMinutesTasks++] = task;
+    if (timerType == IN_SECONDS) { this->_secondsTasks[_totalSecondTasks++] = task; }
+    if (timerType == IN_MILLISECONDS){ this->_millisecondTasks[_totalMillisecondTasks++] = task;}
+    if (timerType == IN_MINUTES) { this->_minutesTasks[_totalMinutesTasks++] = task; }
+    if (timerType == IN_HOURS) { this->_hoursTasks[_totalHoursTasks++] = task; }
 }
 
 void TaskManager::InitializeSetup()
@@ -69,9 +65,9 @@ void TaskManager::UseTimerResolution(uint8_t resolution)
         this->_duration = .001;
         this->_prescaler = 8;
     }
-    if (resolution & IN_MINUTES)
+    if ((resolution & IN_MINUTES) || (resolution & IN_HOURS))
     {
-        // Use seconds for temporary purposes
+        // Use seconds as its the highest
         this->_duration = 1;
         this->_prescaler = 1024;
     }
@@ -95,6 +91,21 @@ void TaskManager::Start()
 }
 
 void TaskManager::Stop(){ timerExecutor.StopTimerExecutor(); }
+
+void TaskManager::OnMsTick()
+{
+    for (_commonIterator = 0; _commonIterator < _totalMillisecondTasks; _commonIterator++)
+    {
+        /* code */
+        if (this->_millisecondTasks[_commonIterator]->CanExecute())
+        {
+            this->_millisecondTasks[_commonIterator]->Execute();
+            this->_millisecondTasks[_commonIterator]->AfterExecute();
+            // if (manager.GlobalWatchdogEnabled)
+                // wdt_reset();                        
+        }
+    }
+}
 
 void TaskManager::OnSecondTick()
 {
@@ -126,7 +137,25 @@ void TaskManager::OnMinuteTick()
     }
 }
 
-void msForwarder(void *context) { }
-void secForwarder(void *context) { }
+void TaskManager::OnHourTick()
+{
+    for (_commonIterator = 0; _commonIterator < _totalHoursTasks; _commonIterator++)
+    {
+        /* code */
+        if (this->_hoursTasks[_commonIterator]->CanExecute())
+        {
+            this->_hoursTasks[_commonIterator]->Execute();
+            this->_hoursTasks[_commonIterator]->AfterExecute();
+            // if (manager.GlobalWatchdogEnabled)
+                // wdt_reset();                        
+        }
+    }
+}
+
+void msForwarder(void *context) { static_cast<TaskManager*>(context)->OnMsTick(); }
+void secForwarder(void *context) { static_cast<TaskManager*>(context)->OnSecondTick(); }
 void minForwarder(void *context) { static_cast<TaskManager*>(context)->OnMinuteTick(); }
-void hrCallbackForwarder(void *context) { }
+void hrCallbackForwarder(void *context) { 
+    Serial.println("Hour tick");
+    static_cast<TaskManager*>(context)->OnHourTick(); 
+}

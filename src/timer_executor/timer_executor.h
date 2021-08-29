@@ -110,7 +110,7 @@ class TimerExecutor
             void (*onSecondTick)(void *context),
             void (*onMinuteTick)(void *context),
             void (*onHourTick)(void *context),
-            void *context) 
+            void* context) 
         { 
             _onMilliSecondTick = onMilliSecondTick;
             _onSecondTick = onSecondTick;
