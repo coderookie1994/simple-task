@@ -10,7 +10,7 @@ void setup()
 
     Serial.begin(115200);
     mgr.UseTimerResolution(IN_SECONDS);
-    mgr.AddTask(task, IN_HOURS, 1);
+    mgr.AddTask(task, IN_SECONDS);
     mgr.InitializeSetup();
     mgr.Start();
 }
@@ -18,5 +18,4 @@ void setup()
 void loop()
 {
     // Serial.println(OCR0A);
-    // delay(1000);
 }

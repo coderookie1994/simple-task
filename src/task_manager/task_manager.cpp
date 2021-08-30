@@ -11,10 +11,10 @@ void hrCallbackForwarder(void *context);
 
 TaskManager::TaskManager()
 {
-    _millisecondTasks = new Task*[1];
-    _secondsTasks = new Task*[1];
-    _minutesTasks = new Task*[1];
-    _hoursTasks = new Task*[1];
+    _millisecondTasks = new Task*[5];
+    _secondsTasks = new Task*[5];
+    _minutesTasks = new Task*[5];
+    _hoursTasks = new Task*[5];
 }
 
 void TaskManager::EnableGlobalWatchdog(const uint8_t& watchDogTimeout)
@@ -23,7 +23,6 @@ void TaskManager::EnableGlobalWatchdog(const uint8_t& watchDogTimeout)
     GlobalWatchdogEnabled = true;
     delay((uint16_t)3000);
     wdt_enable(watchDogTimeout);
-    Serial.print("Enabled watchdog timeout for ");
     Serial.println(watchDogTimeout);
 }
 
@@ -33,10 +32,9 @@ void TaskManager::DisableGlobalWatchdog()
     wdt_disable();
     GlobalWatchdogEnabled = false;
     sei();
-    Serial.print("Disabled watchdog timeout");
 }
 
-void TaskManager::AddTask(Task* const& task, const int& timerType, const uint8_t& value)
+void TaskManager::AddTask(Task* const& task, const int& timerType)
 {
     if (timerType == IN_SECONDS) { this->_secondsTasks[_totalSecondTasks++] = task; }
     if (timerType == IN_MILLISECONDS){ this->_millisecondTasks[_totalMillisecondTasks++] = task;}
@@ -53,33 +51,20 @@ void TaskManager::InitializeSetup()
     for (iterator = 0; iterator < _totalHoursTasks; iterator++) { this->_hoursTasks[iterator]->Setup(); }
 }
 
-void TaskManager::UseTimerResolution(uint8_t resolution)
+void TaskManager::UseTimerResolution(const uint8_t& resolution)
 {
-    if (resolution & IN_SECONDS)
-    {
-        this->_duration = 1;
-        this->_prescaler = 1024;
-    }
     if (resolution & IN_MILLISECONDS)
     {
-        this->_duration = .001;
-        this->_prescaler = 8;
+        _resolution = IN_MILLISECONDS;
+        return;
     }
-    if ((resolution & IN_MINUTES) || (resolution & IN_HOURS))
-    {
-        // Use seconds as its the highest
-        this->_duration = 1;
-        this->_prescaler = 1024;
-    }
+    _resolution = IN_SECONDS;
 }
 
 void TaskManager::Start()
 {
     // Set default resolution to milliseconds if not specifically invoked by the client
-    if (_prescaler == 1024 && _duration == (uint8_t)1)
-    {
-        timerExecutor.UseSecondsResolution();
-    }
+    if (_resolution & IN_SECONDS) { timerExecutor.UseSecondsResolution(); }
     else
         timerExecutor.UseMillisecondResolution();
     timerExecutor.StartTimerExecutor(
@@ -155,7 +140,4 @@ void TaskManager::OnHourTick()
 void msForwarder(void *context) { static_cast<TaskManager*>(context)->OnMsTick(); }
 void secForwarder(void *context) { static_cast<TaskManager*>(context)->OnSecondTick(); }
 void minForwarder(void *context) { static_cast<TaskManager*>(context)->OnMinuteTick(); }
-void hrCallbackForwarder(void *context) { 
-    Serial.println("Hour tick");
-    static_cast<TaskManager*>(context)->OnHourTick(); 
-}
+void hrCallbackForwarder(void *context) { static_cast<TaskManager*>(context)->OnHourTick(); }

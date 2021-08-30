@@ -11,14 +11,12 @@
 class TaskManager
 {
     private:
-        uint8_t _duration = 0;
         uint8_t _totalMillisecondTasks = 0;
         uint8_t _totalSecondTasks = 0;
         uint8_t _totalMinutesTasks = 0;
         uint8_t _totalHoursTasks = 0;
-        unsigned short _prescaler = 0;
         uint8_t _commonIterator = 0;
-        
+        uint8_t _resolution;
         uint16_t GetCompareMatchRegisterValue();
     public:
         Task **_millisecondTasks;
@@ -29,8 +27,8 @@ class TaskManager
         TaskManager();
         void EnableGlobalWatchdog(const uint8_t& watchDogTimeout);
         void DisableGlobalWatchdog();
-        void UseTimerResolution(uint8_t resolution);
-        void AddTask(Task* const& task, const int& timerType, const uint8_t& value);
+        void UseTimerResolution(const uint8_t& resolution);
+        void AddTask(Task* const& task, const int& timerType);
         // void AddTask(Task* task, const int& timerType, const uint8_t& value, const uint8_t& iterations);
         void InitializeSetup();
         void Start();

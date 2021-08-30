@@ -15,9 +15,6 @@ class HoursTimedTaskExecutor : public TimedTaskExecutor
         {            
             // Execute tasks configured for seconds
             hoursCallback();
-            if (++_hours % 60 == 0)
-            {
-                _hours = 0;
-            }
+            if (++_hours % 24 == 0) { _hours = 0; }
         }
 };

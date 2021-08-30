@@ -21,8 +21,7 @@ class TimerExecutor
         TimedTaskExecutor* _hoursTimed;
 
         uint16_t  _prescaler;
-        float _duration;
-        uint16_t _prescalerSelect;
+        uint16_t _cmrValue;
 
         // Callbacks
         void (*_onMilliSecondTick)(void *context);
@@ -33,20 +32,17 @@ class TimerExecutor
 
         // Pointer to the configured TimedTaskExecutor to execute the tasks
         TimedTaskExecutor* _handle;
-        uint16_t GetCompareMatchRegisterValue()
-        {
-            unsigned long num = (16 * 1000000 * _duration) / _prescaler;
-            return (uint16_t)num - 1;
-        }
+        uint16_t GetCompareMatchRegisterValue() { return _cmrValue; }
         void SetupTimer1()
         {
             if (_prescaler == 1024)
             {
-                _prescalerSelect = (1<<CS12) | (1<<CS10);
+                // Reusing the prescaler value for CS bits 
+                _prescaler = (_prescaler & B00000000) | (1<<CS12) | (1<<CS10);
             }
             if (_prescaler == 8)
             {
-                _prescalerSelect = (1<<CS11);
+                _prescaler = (_prescaler & B00000000) | (1<<CS11);
             }
             uint8_t oldSREG = SREG;
             // Disable interrupts
@@ -59,7 +55,7 @@ class TimerExecutor
             TCCR1B = 0;
             OCR1A = this->GetCompareMatchRegisterValue();
             // Set 1024 or 8 as the prescaler and enable counter mode
-            TCCR1B |= (1<<WGM12) | _prescalerSelect;
+            TCCR1B |= (1<<WGM12) | _prescaler;
             // Setup compare match interrupt
             TIMSK1 |= (1<<OCIE1A);
             // Enable interrupts
@@ -73,7 +69,7 @@ class TimerExecutor
             TCCR1A = 0;
             TCCR1B = 0;
             OCR1A = 0;
-            TCCR1B &= ~(1<<WGM12) | ~_prescalerSelect;
+            TCCR1B &= ~(1<<WGM12) | ~_prescaler;
             TIMSK1 &= ~(1<<OCIE1A);
             SREG = oldSREG;
         }
@@ -92,14 +88,14 @@ class TimerExecutor
         }
         void UseMillisecondResolution()
         {
-            _duration = 0.001;
             _prescaler = 8;
+            _cmrValue = 1999;
             this->_handle = this->_millisecondTimed;
         }
         void UseSecondsResolution()
         {
-            _duration = 1;
             _prescaler = 1024;
+            _cmrValue = 15624;
             this->_handle = this->_secondsTimed;
         }
         void StartTimerExecutor(
