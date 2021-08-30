@@ -3,7 +3,7 @@
 #include "task_manager.h"
 #include "blink/blink.h"
 
-TaskManager mgr;
+TaskManager mgr(1, 1, 1, 1);
 void setup()
 {
     BlinkTask* task = new BlinkTask;

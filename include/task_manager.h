@@ -23,8 +23,8 @@ class TaskManager
         Task **_secondsTasks;
         Task **_minutesTasks;
         Task **_hoursTasks;
-        bool GlobalWatchdogEnabled = false;
-        TaskManager();
+        bool GlobalWatchdogEnabled = false;        
+        TaskManager(const uint8_t& ms, const uint8_t& s, const uint8_t& m, const uint8_t& hr);
         void EnableGlobalWatchdog(const uint8_t& watchDogTimeout);
         void DisableGlobalWatchdog();
         void UseTimerResolution(const uint8_t& resolution);

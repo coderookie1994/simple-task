@@ -9,12 +9,12 @@ void secForwarder(void *context);
 void minForwarder(void *context);
 void hrCallbackForwarder(void *context);
 
-TaskManager::TaskManager()
+TaskManager::TaskManager(const uint8_t& ms, const uint8_t& s, const uint8_t& min, const uint8_t& hr)
 {
-    _millisecondTasks = new Task*[5];
-    _secondsTasks = new Task*[5];
-    _minutesTasks = new Task*[5];
-    _hoursTasks = new Task*[5];
+    _millisecondTasks = new Task*[ms];
+    _secondsTasks = new Task*[s];
+    _minutesTasks = new Task*[min];
+    _hoursTasks = new Task*[hr];
 }
 
 void TaskManager::EnableGlobalWatchdog(const uint8_t& watchDogTimeout)
